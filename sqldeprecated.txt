@@ -1,0 +1,71 @@
+$sql = "SELECT st.*, t.*, r.*, strftime('%Y%m%d', '22:34:12') as today, strftime('%Y%m%d', '22:34:12', '1 day') as tomorrow, time('22:34:12') as now
+  FROM stop_times st
+  INNER JOIN trips t
+    ON st.trip_id = t.trip_id
+  INNER JOIN routes r
+    ON t.route_id = r.route_id
+  LEFT JOIN calendar c
+    ON t.service_id = c.service_id
+  LEFT JOIN calendar_dates cd
+    ON t.service_id = cd.service_id
+  WHERE
+    st.stop_id IN (".implode(", ", array_fill(0, count($stops), "?")).") AND
+    (
+      (
+        time(now) < time('23:30:00') AND
+        time(st.departure_time) BETWEEN time(now) AND time(now, '30 minutes') AND
+        (
+          c.service_id IS NULL OR
+          (
+            c.start_date <= today AND
+            c.end_date >= today
+          )
+        ) AND
+        (
+          cd.service_id IS NULL OR
+          cd.date = today
+        )
+      ) OR
+      (
+        time(now) >= time('23:30:00') AND
+        (
+          (
+            time(st.departure_time) >= time(now)  AND
+            (
+              c.service_id IS NULL OR
+              (
+                c.start_date <= today AND
+                c.end_date >= today
+              )
+            ) AND
+            (
+              cd.service_id IS NULL OR
+              cd.date = today
+            )
+          ) OR
+          (
+            time(st.departure_time) <= time(now, '30 minutes') AND
+            (
+              c.service_id IS NULL OR
+              (
+                c.start_date <= tomorrow AND
+                c.end_date >= tomorrow
+              )
+            ) AND
+            (
+              cd.service_id IS NULL OR
+              cd.date = tomorrow
+            )
+          )
+        )
+      )
+    ) AND
+    (
+      c.service_id IS NULL OR
+      c.$dow = ".(int)Gtfs\Calendar\CalendarDay::AVAILABLE."
+    ) AND
+    (
+      cd.service_id IS NULL OR
+      exception_type = ".(int)Gtfs\CalendarDate\ExceptionType::ADDED."
+    )
+  ORDER BY departure_time ASC";

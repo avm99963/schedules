@@ -1,0 +1,81 @@
+body {
+  background: black;
+  color: white;
+  font-family: "Arial", sans-serif;
+  font-weight: bold;
+
+  margin: 0;
+}
+
+#container {
+  width: 100%;
+}
+
+body.view-new #trains {
+  max-width: 680px;
+}
+
+body.view-old #trains {
+  width: 100%;
+}
+
+.train {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+
+  margin: 16px;
+  /*margin-bottom: 5vh;*/
+}
+
+body.view-new .train {
+  margin-bottom: 64px;
+}
+
+.train * {
+  align-self: center;
+}
+
+.train .logo {
+  text-align: center;
+}
+
+body.view-old .train .logo {
+  padding: 8px;
+  margin-right: 16px;
+
+  line-height: 92px;
+  width: 92px;
+  height: 92px;
+}
+
+body.view-new .train .logo {
+  padding: 2px;
+  margin: 8px 12px 8px 0;
+
+  line-height: 88vh;
+  width: 88vh;
+  height: 88vh;
+}
+
+.train .destination {
+  flex-grow: 1;
+}
+
+body.view-old .train .destination {
+  font-size: 54px;
+  margin-left: 16px;
+}
+
+body.view-new .train .destination {
+  font-size: 44px;
+  margin-bottom: 24px;
+}
+
+.train .time {
+  min-width: 154px;
+  margin: 0 16px;
+
+  font-size: 52px;
+  text-align: left;
+}

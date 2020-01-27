@@ -1,0 +1,464 @@
+// Copyright 2012 Google Inc., Stichting OpenGeo, avm99963
+//
+// The content of this file is licensed under the Creative Commons Attribution
+// 3.0 License.
+//
+// Protocol definition file for a GTFS feed.
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+package gtfs;
+
+message FeedMessage {
+  // Metadata about this feed and feed message.
+  FeedHeader header = 1;
+
+  // Contents of the feed.
+  repeated FeedEntity entity = 2;
+}
+
+// Metadata about a feed, included in feed messages.
+message FeedHeader {
+  // Version of the feed specification.
+  // The current version is 1.0.
+  string gtfs_version = 1;
+
+  // The feed_publisher_name field contains the full name of the organization that publishes the feed.
+  string feed_publisher_name = 2;
+
+  // The feed_publisher_url field contains the URL of the feed publishing organization's website.
+  string feed_publisher_url = 3;
+
+  // The feed_lang field contains a IETF BCP 47 language code specifying the default language used for the text in this feed.
+  string feed_lang = 4;
+
+  // The feed provides complete and reliable schedule information for service in the period from the beginning of the
+  // feed_start_date day to the end of the feed_end_date day in YYYYMMDD
+  string feed_start_date = 5;
+  string feed_end_date = 6;
+
+  // The feed publisher can specify a string here that indicates the current version of their GTFS feed.
+  string feed_version = 7;
+
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+// A definition (or update) of an entity in the transit feed.
+message FeedEntity {
+  // The ids are used only to provide incrementality support. The id should be
+  // unique within a FeedMessage. Consequent FeedMessages may contain
+  // FeedEntities with the same id. In case of a DIFFERENTIAL update the new
+  // FeedEntity with some id will replace the old FeedEntity with the same id
+  // (or delete it - see is_deleted below).
+  // The actual GTFS entities (e.g. stations, routes, trips) referenced by the
+  // feed must be specified by explicit selectors (see EntitySelector below for
+  // more info).
+  string id = 1;
+
+  // Whether this entity is to be deleted. Relevant only for incremental
+  // fetches.
+  bool is_deleted = 2;
+
+  // Data about the entity itself. Exactly one of the following fields must be
+  // present (unless the entity is being deleted).
+  oneof element {
+    Agency agency = 3;
+    Stop stop = 4;
+    Route route = 5;
+    Trip trip = 6;
+    StopTime stop_time = 7;
+    Calendar calendar = 8;
+    CalendarDate calendar_date = 9;
+    FareAttribute fare_attribute = 10;
+    FareRule fare_rule = 11;
+    Shape shape = 12;
+    Frequency frequency = 13;
+    Transfer transfer = 14;
+  }
+
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+//
+// Entities used in the feed.
+//
+
+message Agency {
+  // The agency_id field is an ID that uniquely identifies a transit agency.
+  string agency_id = 1;
+
+  // The agency_name field contains the full name of the transit agency.
+  string agency_name = 2;
+
+  // The agency_url field contains the URL of the transit agency.
+  string agency_url = 3;
+
+  // The agency_timezone field contains the timezone where the transit agency is located.
+  string agency_timezone = 4;
+
+  // The agency_lang field contains a two-letter ISO 639-1 code for the primary language used by this transit agency.
+  string agency_lang = 5;
+
+  // The agency_phone field contains a single voice telephone number for the specified agency.
+  string agency_phone = 6;
+
+  // The agency_fare_url specifies the URL of a web page that allows a rider to purchase tickets or other fare instruments for that agency online.
+  string agency_fare_url = 7;
+
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+message Stop {
+  // The stop_id field contains an ID that uniquely identifies a stop or station.
+  // Multiple routes may use the same stop. stop_id is dataset unique.
+  string stop_id = 1;
+
+  // The stop_code field contains short text or a number that uniquely identifies the stop for passengers.
+  string stop_code = 2;
+
+  // The stop_name field contains the name of a stop or station.
+  string stop_name = 3;
+
+  // The stop_desc field contains a description of a stop.
+  string stop_desc = 4;
+
+  // Degrees North, in the WGS-84 coordinate system.
+  float latitude = 5;
+
+  // Degrees East, in the WGS-84 coordinate system.
+  float longitude = 6;
+
+  string zone_id = 7;
+  string stop_url = 8;
+  enum LocationType {
+    // Stop (or Platform). A location where passengers board or disembark from a transit vehicle. Is called a platform when defined within a parent_station.
+    STOP = 0;
+
+    // Station. A physical structure or area that contains one or more platform.
+    STATION = 1;
+
+    // Entrance/Exit. A location where passengers can enter or exit a station from the street. If an entrance/exit belongs to multiple stations, it can be linked by pathways to both, but the data provider must pick one of them as parent.
+    ENTRANCE= 2;
+
+    // Generic Node. A location within a station, not matching any other location_type, which can be used to link together pathways define in pathways.txt.
+    GENERIC_NODE = 3;
+
+    // Boarding Area. A specific location on a platform, where passengers can board and/or alight vehicles.
+    BOARDING_AREA = 4;
+  }
+  LocationType location_type = 9;
+
+  string parent_station = 10;
+  string agency_timezone = 11;
+
+  enum WheelchairBoarding {
+    // no accessibility information for the stop
+    UNKNOWN = 0;
+
+    // some vehicles at this stop can be boarded by a rider in a wheelchair
+    ACCESSIBLE = 1;
+
+    // wheelchair boarding is not possible at this stop
+    NOT_ACCESSIBLE = 2;
+  }
+  // The exact status of the vehicle with respect to the current stop.
+  // Ignored if current_stop_sequence is missing.
+  WheelchairBoarding wheelchair_boarding = 12;
+
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+message Route {
+  // The route_id field contains an ID that uniquely identifies a route.
+  // The route_id is dataset unique.
+  string route_id = 1;
+
+  // The agency_id field defines an agency for the specified route.
+  string agency_id = 2;
+
+  // The route_short_name contains the short name of a route.
+  string route_short_name = 3;
+
+  // The route_long_name contains the full name of a route.
+  string route_long_name = 4;
+
+  // The route_desc field contains a description of a route.
+  string route_desc = 5;
+
+  // The route_type field describes the type of transportation used on a route.
+  enum RouteType {
+    // Tram, Streetcar, Light rail. Any light rail or street level system within a metropolitan area.
+    TRAM = 0;
+
+    // Subway, Metro. Any underground rail system within a metropolitan area.
+    SUBWAY = 1;
+
+    // Rail. Used for intercity or long-distance travel.
+    RAIL = 2;
+
+    // Bus. Used for short- and long-distance bus routes.
+    BUS = 3;
+
+    // Ferry. Used for short- and long-distance boat service.
+    FERRY = 4;
+
+    // Cable car. Used for street-level cable cars where the cable runs beneath the car.
+    CABLECAR = 5;
+
+    // Gondola, Suspended cable car. Typically used for aerial cable cars where the car is suspended from the cable.
+    GONDOLA = 6;
+
+    // Funicular. Any rail system designed for steep inclines.
+    FUNICULAR = 7;
+  }
+  RouteType route_type = 6;
+
+  // The route_url field contains the URL of a web page about that particular route.
+  string route_url = 7;
+
+  // In systems that have colors assigned to routes, the route_color field defines a color that corresponds to a route.
+  // The color must be provided as a six-character hexadecimal number, for example, 00FFFF.
+  string route_color = 8;
+
+  // The route_text_color field can be used to specify a legible color to use for text drawn against a background of route_color.
+  string route_text_color = 9;
+
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+
+message Trip {
+  // The route_id field contains an ID that uniquely identifies a route.
+  string route_id = 1;
+
+  // The service_id contains an ID that uniquely identifies a set of dates when service is available for one or more routes.
+  string service_id = 2;
+
+  // The trip_id field contains an ID that identifies a trip. The trip_id is dataset unique.
+  string trip_id = 3;
+
+  // The trip_headsign field contains the text that appears on a sign that identifies the trip's destination to passengers.
+  string trip_headsign = 4;
+
+  // The trip_short_name field contains the text that appears in schedules and sign boards to identify the trip to passengers.
+  string trip_short_name = 5;
+
+  // The direction_id field contains a binary value that indicates the direction of travel for a trip.
+  enum Direction {
+    OUTBOUND = 0;
+
+    INBOUND = 1;
+  }
+  Direction direction_id = 6;
+
+  // The block_id field identifies the block to which the trip belongs.
+  // A block consists of two or more sequential trips made using the same vehicle,
+  // where a passenger can transfer from one trip to the next just by staying in the vehicle.
+  string block_id = 7;
+
+  // The shape_id field contains an ID that defines a shape for the trip.
+  string shape_id = 8;
+
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+message StopTime {
+  // The trip_id field contains an ID that identifies a trip. The trip_id is dataset unique.
+  string trip_id = 1;
+
+  string arrival_time = 2;
+  string departure_time = 3;
+
+  // TODO: Brian why not make this:
+  // int32 arrival_time_secs = 2;
+  // int32 departure_time_secs = 3;
+
+  string stop_id = 4;
+  string stop_sequence = 5;
+
+  string stop_headsign = 6;
+
+  enum AvailabilityType {
+    // Tram, Streetcar, Light rail. Any light rail or street level system within a metropolitan area.
+    REGULAR = 0;
+
+    // Subway, Metro. Any underground rail system within a metropolitan area.
+    NOT_AVAILABLE = 1;
+
+    // Rail. Used for intercity or long-distance travel.
+    PHONE = 2;
+
+    // Bus. Used for short- and long-distance bus routes.
+    DRIVER = 3;
+  }
+  AvailabilityType pickup_type = 7;
+
+  AvailabilityType drop_off_type = 8;
+
+  float shape_dist_traveled = 9;
+
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+message Calendar {
+  // The trip_id field contains an ID that identifies a trip. The trip_id is dataset unique.
+  string service_id = 1;
+
+  enum CalendarDay {
+    NOT_AVAILABLE = 0;
+    AVAILABLE = 1;
+  }
+  CalendarDay monday = 2;
+  CalendarDay tuesday = 3;
+  CalendarDay wednesday = 4;
+  CalendarDay thursday = 5;
+  CalendarDay friday = 6;
+  CalendarDay saturday = 7;
+  CalendarDay sunday = 8;
+
+  string start_date = 9;
+  string end_date = 10;
+
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+message CalendarDate {
+  // The trip_id field contains an ID that identifies a trip. The trip_id is dataset unique.
+  string service_id = 1;
+
+  string date = 2;
+
+  enum ExceptionType {
+    UNUSED_UNKNOWN = 0;
+    ADDED = 1;
+    REMOVED = 2;
+  }
+  ExceptionType exception_type = 3;
+
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+message FareAttribute {
+  string fare_id = 1;
+  float price = 2;
+  string currency_type = 3;
+
+  enum PaymentMethod {
+    ONBOARD = 0;
+    PREBOARDING = 1;
+  }
+  PaymentMethod payment_method = 4;
+
+  enum Transfers {
+    NO = 0;
+    ONCE = 1;
+    TWICE = 2;
+    UNLIMITED = 3;
+  }
+  Transfers transfers = 5;
+
+  int32 transfer_duration = 6;
+
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+message FareRule {
+  string fare_id = 1;
+  string route_id = 2;
+  string origin_id = 3;
+  string destination_id = 4;
+  string contains_id = 5;
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+message Shape {
+  string shape_id = 1;
+  float shape_pt_lat = 2;
+  float shape_pt_lon = 3;
+  int32 shape_pt_sequence = 4;
+  float shape_dist_traveled = 5;
+
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+message Frequency {
+  string trip_id = 1;
+  string start_time = 2;
+  string end_time = 3;
+  int32 headway_secs = 4;
+  enum ScheduleType {
+    NOT_EXACTLY = 0;
+    EXACTLY = 1;
+  }
+  ScheduleType exact_times = 5;
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
+
+message Transfer {
+  string from_stop_id = 1;
+  string to_stop_id = 2;
+  enum TransferType {
+    RECOMMENDED = 0;
+    TIMED = 1;
+    MINIMUM = 2;
+    NOT_POSSIBLE = 3;
+  }
+  TransferType transfer_type = 3;
+
+  int32 min_transfer_time = 4;
+
+  // The extensions namespace allows 3rd-party developers to extend the
+  // GTFS specification in order to add and evaluate new features and
+  // modifications to the spec.
+  google.protobuf.Any extension = 2000;
+  reserved 1000 to 1999;
+}
