@@ -92,7 +92,7 @@ class gtfs {
     return $results;
   }
 
-  const TIME_LIMIT = 160;
+  const TIME_LIMIT = 30;
   function getStopTimes($stop, $timeLimit = self::TIME_LIMIT) {
     $stops = $this->getPlatforms($stop);
 
