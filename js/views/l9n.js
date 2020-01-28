@@ -49,6 +49,19 @@ var scheduleController = {
       0,0,0);
     return Math.floor((now.getTime() - then.getTime())/1000);
   },
+  getTime: function() {
+    return Math.floor((new Date()).getTime()/1000);
+  },
+  timeSinceMidnightInverse: function(sec) {
+    var now = new Date();
+    var today = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      0,0,0);
+
+    return Math.floor(today.getTime()/1000) + sec;
+  },
   prettyTime: function(seconds, detailed = true) {
     if (detailed) return (Math.floor(seconds/60)).toString().padStart(2, '0')+":"+(seconds % 60).toString().padStart(2, '0');
     return Math.floor(seconds/60)+"min";
@@ -79,7 +92,7 @@ var scheduleController = {
     trains.appendChild(train);
 
     data._element = time;
-    data._markedToRemove = false;
+    data._removeAtTime = scheduleController.timeSinceMidnightInverse(data.departureTime);
     scheduleController._times.push(data);
   },
   addTime: function(data) {
@@ -122,17 +135,16 @@ var scheduleController = {
   },
   timer: function() {
     var timeSinceMidnight = scheduleController.timeSinceMidnight();
+    var time = scheduleController.getTime();
 
     var removed = 0;
     for (var i = 0;; ++i) {
       if (scheduleController._times[i - removed] === undefined) break;
 
-      if (scheduleController._times[i - removed]._markedToRemove) {
+      if (scheduleController._times[i - removed]._removeAtTime < time) {
         scheduleController.removeElement(scheduleController._times[i - removed]._element.parentNode);
         scheduleController._times.shift();
         ++removed;
-      } else if (scheduleController._times[i - removed].departureTime - timeSinceMidnight == 0) {
-        scheduleController._times[i - removed]._markedToRemove = true;
       }
     }
 
