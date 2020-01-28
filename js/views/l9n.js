@@ -131,9 +131,7 @@ var scheduleController = {
         scheduleController.removeElement(scheduleController._times[i - removed]._element.parentNode);
         scheduleController._times.shift();
         ++removed;
-      }
-
-      if (scheduleController._times[i - removed].departureTime - timeSinceMidnight == 0) {
+      } else if (scheduleController._times[i - removed].departureTime - timeSinceMidnight == 0) {
         scheduleController._times[i - removed]._markedToRemove = true;
       }
     }
