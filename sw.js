@@ -1,4 +1,4 @@
-var CACHE_NAME = 'linia-cache-v1.0.1';
+var CACHE_NAME = 'linia-cache-v1.0.2';
 var urlsToCache = [
   '.',
   'js/index.js',
@@ -6,7 +6,8 @@ var urlsToCache = [
   'info.php?view=0',
   'info.php?view=1',
   'js/views/l9n.js',
-  'css/views/l9n.css'
+  'css/views/l9n.css',
+  'offline.html'
 ];
 
 self.addEventListener('install', function(event) {
@@ -34,6 +35,7 @@ self.addEventListener('fetch', function(event) {
       return fetch(event.request);
     }).catch(err => {
       console.error(err);
+      return caches.match('offline.html');
     })
   );
 });
