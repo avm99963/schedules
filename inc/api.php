@@ -1,20 +1,20 @@
 <?php
 class api {
-  private function writeJSON($array) {
+  private static function writeJSON($array) {
     echo json_encode($array);
   }
 
-  private function error($error = null) {
+  private static function error($error = null) {
     self::writeJSON(["status" => "error", "error" => $error]);
     exit();
   }
 
-  private function returnData($data) {
+  private static function returnData($data) {
     self::writeJSON(["status" => "ok", "data" => $data]);
     exit();
   }
 
-  private function transformRouteShortName($name) {
+  private static function transformRouteShortName($name) {
     if ($name == "L9N") return "L9";
     if ($name == "L10N") return "L10";
     return $name;
