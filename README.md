@@ -9,4 +9,3 @@ Schedule viewer for the Barcelona subway.
 
 ## Notes
 - As I've been able to see when using this app around Barcelona, the schedules provided by TMB are a very vague approximation of the departure times for all lines except for the automated lines. In the case of the automated lines, the timing is precise within a second.
-- As of now, the timezone set in the server must be Europe/Madrid (because of the way sqlite3 treats timezones). Otherwise, the app will not work properly.
