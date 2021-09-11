@@ -1,7 +1,5 @@
 <?php
 require_once("core.php");
-
-$gtfs = new gtfs();
 ?>
 <!DOCTYPE html>
 <html>

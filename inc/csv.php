@@ -1,7 +1,5 @@
 <?php
 class csv {
-  public static $fields = ["dni", "name", "category", "email", "companies"];
-
   public static function csv2array($file, $check = null, $onlyField = null) {
     $return = [];
 
