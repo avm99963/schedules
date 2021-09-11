@@ -137,11 +137,11 @@ class gtfsHandler {
     ],
     "shapes" => [
       "columns" => [
-        "shape_id" => "TEXT PRIMARY KEY",
+        "shape_id" => "TEXT",
         "shape_pt_lat" => "FLOAT NOT NULL",
         "shape_pt_lon" => "FLOAT NOT NULL",
         "shape_pt_sequence" => "INT NOT NULL",
-        "shape_dist_traveled" => "FLOAT NOT NULL"
+        "shape_dist_traveled" => "FLOAT"
       ]
     ],
     "frequencies" => [
