@@ -30,6 +30,8 @@ require_once("core.php");
       </p>
     </form>
 
+    <p class="disclaimer">Font: <a href="https://developer.tmb.cat/">TMB</a>. Dades actualitzades cada setmana.</p>
+
     <script src="js/index.js"></script>
   </body>
 </html>

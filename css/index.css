@@ -5,3 +5,7 @@ body {
 form label {
   font-weight: bold;
 }
+
+.disclaimer {
+  font-size: 14px;
+}
