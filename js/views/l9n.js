@@ -1,7 +1,3 @@
-Number.prototype.mod = function(n) {
-  return ((this % n) + n) % n;
-}
-
 var scheduleController = {
   maxSchedules: 6,
   recommendedSchedulesPerLine: 2,
@@ -40,27 +36,8 @@ var scheduleController = {
   removeDummy: function() {
     document.getElementById("trains").innerHTML = "";
   },
-  timeSinceMidnight: function() {
-    var now = new Date();
-    var then = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      0,0,0);
-    return Math.floor((now.getTime() - then.getTime())/1000);
-  },
   getTime: function() {
     return Math.floor((new Date()).getTime()/1000);
-  },
-  timeSinceMidnightInverse: function(sec) {
-    var now = new Date();
-    var today = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      0,0,0);
-
-    return Math.floor(today.getTime()/1000) + sec;
   },
   prettyTime: function(seconds, detailed = true) {
     if (detailed) return (Math.floor(seconds/60)).toString().padStart(2, '0')+":"+(seconds % 60).toString().padStart(2, '0');
@@ -92,14 +69,13 @@ var scheduleController = {
     trains.appendChild(train);
 
     data._element = time;
-    data._removeAtTime = scheduleController.timeSinceMidnightInverse(data.departureTime);
     scheduleController._times.push(data);
   },
   addTime: function(data) {
     if (data.departureTime > scheduleController._lastTime) {
       scheduleController._lastTime = data.departureTime;
       scheduleController._lastDestinations = [data.destination];
-    } else if (data.departureTime == scheduleController.lastTime) {
+    } else if (data.departureTime == scheduleController._lastTime) {
       var flag = false;
       scheduleController._lastDestinations.forEach(dest => {
         if (data.destination == dest) flag = true;
@@ -134,14 +110,13 @@ var scheduleController = {
     setTimeout(scheduleController.fetchTimes, scheduleController.fetchInterval);
   },
   timer: function() {
-    var timeSinceMidnight = scheduleController.timeSinceMidnight();
-    var time = scheduleController.getTime();
+    var now = scheduleController.getTime();
 
     var removed = 0;
     for (var i = 0;; ++i) {
       if (scheduleController._times[i - removed] === undefined) break;
 
-      if (scheduleController._times[i - removed]._removeAtTime < time) {
+      if (scheduleController._times[i - removed].departureTime < now) {
         scheduleController.removeElement(scheduleController._times[i - removed]._element.parentNode);
         scheduleController._times.shift();
         ++removed;
@@ -156,7 +131,7 @@ var scheduleController = {
 
     var i = 0;
     scheduleController._times.forEach(time => {
-      var diff = (time.departureTime - timeSinceMidnight).mod(24*60*60);
+      var diff = time.departureTime - now;
 
       time._element.textContent = scheduleController.prettyTime(diff, scheduleController.isDetailed(i));
 

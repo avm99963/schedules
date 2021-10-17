@@ -69,18 +69,51 @@ class api {
       $stop = $gtfs->getStop($_GET["stop"]);
       $times = $gtfs->getStopTimes($_GET["stop"]);
 
+      $todayTimestamp = (new DateTime("today"))->getTimestamp();
+      $nowTimestamp = (new DateTime("now"))->getTimestamp();
+
       $schedules = [];
       $routes = [];
       foreach ($times as $time) {
         if ($time["trip_headsign"] == $stop["stop_name"]) continue;
-        $schedules[] = [
+
+        if ($time["date"]) {
+          // In this case the train was specifically scheduled for this date,
+          // so we are given the exact date.
+          $date = new DateTime($time["date"]);
+          $arrivalTime = gtfs::time2seconds($time["arrival_time"], false);
+          $departureTime = gtfs::time2seconds($time["departure_time"], false);
+          while ($departureTime >= 24*60*60) {
+            $arrivalTime -= 24*60*60;
+            $departureTime -= 24*60*60;
+            $date->add(new DateInterval("P1D"));
+          }
+
+          $dayTimestamp = $date->getTimestamp();
+        } else {
+          // In this case the train was scheduled several days, so we'll check
+          // whether the train has already passed today (in which case it will
+          // pass tomorrow) or it hasn't (in which case it will pass today).
+          $arrivalTime = gtfs::time2seconds($time["arrival_time"], true);
+          $departureTime = gtfs::time2seconds($time["departure_time"], true);
+          if ($todayTimestamp + $departureTime >= $nowTimestamp)
+            $dayTimestamp = $todayTimestamp;
+          else
+            $dayTimestamp = $todayTimestamp->add(new DateInterval("P1D"));
+        }
+
+        $schedule = [
           "destination" => $time["trip_headsign"],
-          "arrivalTime" => gtfs::time2seconds($time["arrival_time"]),
-          "departureTime" => gtfs::time2seconds($time["departure_time"]),
+          "arrivalTime" => $dayTimestamp + $arrivalTime,
+          "departureTime" => $dayTimestamp + $departureTime,
           "route" => self::transformRouteShortName($time["route_short_name"]),
           "color" => $time["route_color"],
           "textColor" => $time["route_text_color"]
         ];
+        if (isset($_GET["includeSqlRows"]))
+          $schedule["originalSqlRow"] = $time;
+
+        $schedules[] = $schedule;
 
         if (!in_array($time["route_short_name"], $routes)) $routes[] = $time["route_short_name"];
       }

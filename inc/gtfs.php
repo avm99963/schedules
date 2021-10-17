@@ -25,13 +25,18 @@ class gtfs {
     return date("Ymd");
   }
 
-  static function time2seconds($time) {
+  // Converts a time in the format "HH:MM:SS" to the number of seconds. If
+  // |uniqueRepresentative| is true, when HH >= 24, a representative between 0
+  // and 24*60*60 - 1 of the equivalence class mod 24*60*60 will be returned
+  // instead of returning a number >= 24*60*60.
+  static function time2seconds($time, $uniqueRepresentative=true) {
     $timeSinceMidnight = self::timeSinceMidnight();
 
     $boom = explode(":", $time);
     if (count($boom) != 3) return null;
 
-    return ((($boom[0]*60) + $boom[1])*60 + $boom[2]) % (24*60*60);
+    $seconds = (($boom[0]*60) + $boom[1])*60 + $boom[2];
+    return $uniqueRepresentative ? $seconds % (24*60*60) : $seconds;
   }
 
   private function fetchAll($sql) {
@@ -104,9 +109,11 @@ class gtfs {
     $stopParameters = array_keys($values);
 
     $rdow = (int)(new DateTime("now"))->format("w");
+    $dow0 = self::$dow[($rdow - 1) % 7]; // Yesterday's day of week
     $dow = self::$dow[$rdow]; // Today's day of week
     $dow2 = self::$dow[($rdow + 1) % 7]; // Tomorrow's day of week
 
+    $values[":yesterday"] = (int)(new DateTime("yesterday"))->format("Ymd"); // Yesterday's date
     $values[":today"] = (int)(new DateTime("now"))->format("Ymd"); // Today's date
     $values[":tomorrow"] = (int)(new DateTime("tomorrow"))->format("Ymd"); // Tomorrow's date
     $values[":now"] = (new DateTime("now"))->format("H:i:s");
@@ -138,7 +145,7 @@ class gtfs {
             ) OR
             (
               time(:now) >= time('00:00:00', '-".(int)$timeLimit." minutes') AND
-              st.departure_time BETWEEN time(:now) AND strftime('24:%M:%S', :now, '".(int)$timeLimit." minutes')
+              st.departure_time BETWEEN time(:now) AND ((strftime('%H', :now, '".(int)$timeLimit." minutes') + 24) || strftime(':%M:%S', :now, '".(int)$timeLimit." minutes'))
             )
           ) AND
           (
@@ -162,9 +169,25 @@ class gtfs {
             ) OR
             (
               time(:now) >= time('00:00:00', '-".(int)$timeLimit." minutes') AND
-              st.departure_time BETWEEN time(:now) AND strftime('24:%M:%S', :now, '".(int)$timeLimit." minutes')
+              st.departure_time BETWEEN ((strftime('%H', :now) + 24) || strftime(':%M:%S', :now)) AND ((strftime('%H', :now, '".(int)$timeLimit." minutes') + 48) || strftime(':%M:%S', :now, '".(int)$timeLimit." minutes'))
             )
           ) AND
+          (
+            c.service_id IS NULL OR
+            (
+              c.start_date <= :yesterday AND
+              c.end_date >= :yesterday AND
+              c.$dow0 = ".(int)Gtfs\Calendar\CalendarDay::AVAILABLE."
+            )
+          ) AND
+          (
+            cd.service_id IS NULL OR
+            cd.date = :yesterday
+          )
+        ) OR
+        (
+          time(:now) >= time('00:00:00', '-".(int)$timeLimit." minutes') AND
+          st.departure_time BETWEEN time('00:00:00') AND time(:now, '".(int)$timeLimit." minutes') AND
           (
             c.service_id IS NULL OR
             (
