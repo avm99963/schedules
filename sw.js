@@ -1,4 +1,4 @@
-var CACHE_NAME = 'linia-cache-v1.0.2';
+var CACHE_NAME = 'linia-cache-v1.0.3';
 var urlsToCache = [
   '.',
   'js/index.js',
