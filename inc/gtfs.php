@@ -109,7 +109,7 @@ class gtfs {
     $stopParameters = array_keys($values);
 
     $rdow = (int)(new DateTime("now"))->format("w");
-    $dow0 = self::$dow[($rdow - 1) % 7]; // Yesterday's day of week
+    $dow0 = self::$dow[($rdow + 6) % 7]; // Yesterday's day of week
     $dow = self::$dow[$rdow]; // Today's day of week
     $dow2 = self::$dow[($rdow + 1) % 7]; // Tomorrow's day of week
 
@@ -153,7 +153,7 @@ class gtfs {
             (
               c.start_date <= :today AND
               c.end_date >= :today AND
-              c.$dow = ".(int)Gtfs\Calendar\CalendarDay::AVAILABLE."
+              c.".$dow." = ".(int)Gtfs\Calendar\CalendarDay::AVAILABLE."
             )
           ) AND
           (
@@ -177,7 +177,7 @@ class gtfs {
             (
               c.start_date <= :yesterday AND
               c.end_date >= :yesterday AND
-              c.$dow0 = ".(int)Gtfs\Calendar\CalendarDay::AVAILABLE."
+              c.".$dow0." = ".(int)Gtfs\Calendar\CalendarDay::AVAILABLE."
             )
           ) AND
           (
@@ -193,7 +193,7 @@ class gtfs {
             (
               c.start_date <= :tomorrow AND
               c.end_date >= :tomorrow AND
-              c.$dow2 = ".(int)Gtfs\Calendar\CalendarDay::AVAILABLE."
+              c.".$dow2." = ".(int)Gtfs\Calendar\CalendarDay::AVAILABLE."
             )
           ) AND
           (
